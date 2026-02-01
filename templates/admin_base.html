@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Admin Panel | TradeHaven{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-white">
+
+  <header class="bg-black py-4 px-6 shadow-md flex justify-between items-center">
+    <h1 class="text-2xl font-bold text-orange-400">Admin Panel</h1>
+    <a href="/logout" class="bg-red-500 px-4 py-2 rounded hover:bg-red-600 text-sm font-bold">Logout</a>
+  </header>
+
+  <main class="p-8 max-w-7xl mx-auto">
+    {% block content %}{% endblock %}
+  </main>
+
+</body>
+</html>

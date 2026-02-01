@@ -1,0 +1,267 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard | TradeHaven{% endblock %}
+
+{% block content %}
+<div class="pt-24 flex min-h-screen overflow-hidden">
+  <!-- Sidebar -->
+  <aside class="w-64 h-[calc(100vh-5rem)] overflow-y-auto shadow-2xl flex flex-col justify-between py-6 px-4 fixed top-20 left-0">
+    <div>
+      <div class="text-center mb-6">
+        <div class="text-[#FFA500] font-bold text-xl uppercase">{{ user.name }}</div>
+        <div class="mt-3 mb-2 rounded-lg border border-[#FFA500] py-2 px-4 flex items-center justify-center">
+          <h6>WALLET :</h6>
+          <span class="text-lg font-semibold text-green-400 ps-2"> ₹ {{ '%.2f' | format(user.balance) }}</span>
+        </div>
+      </div>
+      <nav class="space-y-9 text-sm">
+        <a href="/dashboard" class="block text-[#FFA500] font-bold mt-[50px] text-center">Dashboard</a>
+        <a href="/watchlist" class="block hover:text-[#FFA500] text-center">WatchList</a>
+        <a href="/portfolio" class="block hover:text-[#FFA500] text-center">Portfolio</a>
+        <a href="/market" class="block hover:text-[#FFA500] text-center">Market</a>
+        <a href="/prediction" class="block hover:text-[#FFA500] text-center">Prediction</a>
+        <a href="/transactions" class="block hover:text-[#FFA500] text-center">Transaction</a>
+        <a href="/support" class="block hover:text-[#FFA500] text-center">Support</a>
+        <a href="/settings" class="block hover:text-[#FFA500] text-center">Setting</a>
+      </nav>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 ml-64 mt-[-80px] p-6 space-y-6 h-[calc(100%-6rem)]">
+    
+    <!-- Index Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+      {% for name, data in indices.items() %}
+      <div onclick="updateChartByIndex('{{ name }}')" class="cursor-pointer p-4 rounded-lg shadow-2xl text-center">
+        <div class="text-sm text-gray-400">{{ name }}</div>
+        <div class="text-2xl font-bold" id="{{ name }}CardValue">₹{{ '%.2f' | format(data.value) }}</div>
+        <div class="text-sm" id="{{ name }}CardChange" style="color: {{ 'lightgreen' if data.is_up else 'red' }}">
+          {{ '▲' if data.is_up else '▼' }} {{ '%.2f' | format(data.change) }}%
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Market Overview Chart -->
+    <div class="shadow-2xl p-6 rounded-lg">
+      <div class="flex flex-wrap justify-between items-center mb-4 gap-4">
+        <h2 class="text-[#FFA500] font-bold">Market Overview</h2>
+        <div class="flex gap-2 flex-wrap">
+          <button onclick="updateChartRange('week')" class="bg-[#FFA500] px-3 py-1 rounded-md">Week</button>
+          <button onclick="updateChartRange('month')" class="bg-[#FFA500] px-3 py-1 rounded-md">Month</button>
+          <button onclick="updateChartRange('year')" class="bg-[#FFA500] px-3 py-1 rounded-md">Year</button>
+          <select id="chartType" onchange="changeChartType(this.value)"
+            class="bg-black border border-gray-600 px-3 py-1 rounded-md text-white">
+            <option value="line">Line Chart</option>
+            <option value="bar">Bar Chart</option>
+          </select>
+        </div>
+      </div>
+      <canvas id="marketChart"></canvas>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="shadow-2xl p-6 rounded-lg">
+      <h2 class="text-[#FFA500] font-bold mb-4">Recent Transactions</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left">
+          <thead class="text-orange-300">
+            <tr>
+              <th class="py-2">#</th>
+              <th>ID</th>
+              <th>Date</th>
+              <th>Stock</th>
+              <th>Qty</th>
+              <th>Type</th>
+              <th>Price</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for tx in transactions %}
+            <tr class="border-t border-gray-600">
+              <td class="py-2">{{ loop.index }}</td>
+              <td>#T2025{{ tx.id }}</td>
+              <td>{{ tx.date }}</td>
+              <td>{{ tx.stock_symbol }}</td>
+              <td>{{ tx.quantity }}</td>
+              <td class="{% if tx.type == 'BUY' %}text-green-400{% else %}text-red-400{% endif %}">{{ tx.type }}</td>
+              <td>₹{{ '%.2f' | format(tx.price) }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Stock Screener -->
+    <div class="shadow-2xl p-6 rounded-lg">
+      <h2 class="text-[#FFA500] font-bold mb-4">Stock Screener</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left">
+          <thead class="text-red-300">
+            <tr>
+              <th class="py-2">Name</th>
+              <th>Price</th>
+              <th>% Change</th>
+              <th>Vol</th>
+              <th>Sector</th>
+            </tr>
+          </thead>
+          <tbody class="border-t border-gray-700">
+            {% for stock in screener %}
+            <tr class="border-gray-700 py-2">
+              <td class="text-green-400">{{ stock.name }}</td>
+              <td>{{ '%.2f' | format(stock.price) }}</td>
+              <td>{{ '%.2f' | format(stock.change) }}%</td>
+              <td>{{ stock.volume }}</td>
+              <td>{{ stock.sector }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  let chart;
+  let chartLabels = [];
+  let chartData = [];
+  let currentIndex = 'Sensex';
+  let chartType = 'line';
+  const maxPoints = 30;
+
+  function generateNextPrice(prevPrice) {
+    return parseFloat((prevPrice + (Math.random() * 200 - 100)).toFixed(2));
+  }
+
+  function generateBarSeries(startValue, points = 30) {
+    const data = [];
+    let value = startValue;
+    for (let i = 0; i < points; i++) {
+      const direction = Math.random() < 0.5 ? -1 : 1;
+      const gap = Math.floor(Math.random() * (15000 - 3000 + 1)) + 3000;
+      value += direction * gap;
+      data.push(Math.max(1000, value));
+    }
+    return data;
+  }
+
+  function initChart() {
+    const ctx = document.getElementById('marketChart').getContext('2d');
+    if (chart) chart.destroy();
+
+    chartLabels = Array.from({ length: maxPoints }, (_, i) => i + 1);
+    let base = 51800;
+
+    chartData = chartType === 'bar'
+      ? generateBarSeries(base, maxPoints)
+      : Array.from({ length: maxPoints }, () => base = generateNextPrice(base));
+
+    chart = new Chart(ctx, {
+      type: chartType,
+      data: {
+        labels: chartLabels,
+        datasets: [{
+          label: `${currentIndex} Price`,
+          data: chartData,
+          borderColor: '#facc15',
+          backgroundColor: chartType === 'bar' ? '#facc15' : 'rgba(234, 179, 8, 0.1)',
+          tension: chartType === 'line' ? 0.4 : 0,
+          fill: chartType === 'line'
+        }]
+      },
+      options: {
+        responsive: true,
+        animation: {
+          duration: chartType === 'line' ? 600 : 0,
+          easing: 'easeInOutCubic'
+        },
+        plugins: { legend: { display: false } },
+        scales: {
+          x: {
+            ticks: { color: '#FFA500' },
+            grid: { color: '#333' },
+            barPercentage: 0.8,
+            categoryPercentage: 0.7
+          },
+          y: {
+            ticks: { color: '#FFA500' },
+            grid: { color: '#333' }
+          }
+        }
+      }
+    });
+  }
+
+  function addNewDataPoint() {
+    if (chartType !== 'line') return;
+
+    const last = chartData[chartData.length - 1];
+    const next = generateNextPrice(last);
+    chartLabels.push(chartLabels.length + 1);
+    chartData.push(next);
+    if (chartLabels.length > maxPoints) {
+      chartLabels.shift();
+      chartData.shift();
+    }
+    chart.update();
+  }
+
+  function updateChartByIndex(index) {
+    currentIndex = index;
+    chart.data.datasets[0].label = `${index} Price`;
+    chart.update();
+  }
+
+  function changeChartType(type) {
+    chartType = type;
+    initChart();
+  }
+
+  function updateChartRange(range) {
+    fetch(`/api/chart_data?period=${range}`)
+      .then(res => res.json())
+      .then(data => {
+        chartLabels = data.map((_, i) => i + 1);
+        chartData = chartType === 'bar'
+          ? generateBarSeries(51800, chartLabels.length)
+          : data;
+        chart.data.labels = chartLabels;
+        chart.data.datasets[0].data = chartData;
+        chart.update();
+      })
+      .catch(err => console.error('Failed to update chart:', err));
+  }
+
+  function updateIndexUI(data) {
+    for (let key in data) {
+      const valueEl = document.getElementById(`${key}CardValue`);
+      const changeEl = document.getElementById(`${key}CardChange`);
+      const value = data[key].value.toFixed(2);
+      const change = data[key].change.toFixed(2);
+      const isUp = data[key].is_up;
+
+      if (valueEl && changeEl) {
+        valueEl.textContent = `₹${value}`;
+        changeEl.textContent = `${isUp ? '▲' : '▼'} ${change}%`;
+        changeEl.style.color = isUp ? 'lightgreen' : 'red';
+      }
+    }
+  }
+
+  function fetchIndices() {
+    fetch('/api/indices')
+      .then(res => res.json())
+      .then(data => updateIndexUI(data))
+      .catch(err => console.error('Error fetching index data:', err));
+  }
+
+  initChart();
+  setInterval(fetchIndices, 2000);
+  setInterval(addNewDataPoint, 3000);
+</script>
+{% endblock %}

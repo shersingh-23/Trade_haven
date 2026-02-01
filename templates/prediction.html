@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block title %}Prediction | TradeHaven{% endblock %}
+
+{% block content %}
+<div class="pt-24 flex min-h-screen overflow-hidden">
+
+  <!-- Fixed Sidebar -->
+  <aside class="w-64 h-[calc(100vh-5rem)] overflow-y-auto flex flex-col justify-between py-6 px-4 fixed top-20 left-0 shadow-2xl">
+    <div>
+      <div class="text-center mb-6">
+        <div class="text-[#FFA500] font-bold text-xl uppercase">{{ user.name }}</div>
+        <div class="mt-3 mb-2 rounded-lg border border-[#FFA500] py-2 px-4 flex items-center justify-center">
+          <h6>WALLET : </h6>
+          <span class="text-lg font-semibold text-green-400 ps-2"> ₹ {{ '%.2f' | format(user.balance) }}</span>
+        </div>
+      </div>
+      <nav class="space-y-9 text-sm">
+        <a href="/dashboard" class="block hover:text-[#FFA500] mt-[50px] text-center">Dashboard</a>
+        <a href="/watchlist" class="block hover:text-[#FFA500] text-center">WatchList</a>
+        <a href="/portfolio" class="block hover:text-[#FFA500] text-center">Portfolio</a>
+        <a href="/market" class="block hover:text-[#FFA500] text-center">Market</a>
+        <a href="/prediction" class="block font-bold text-[#FFA500] text-center">Prediction</a>
+        <a href="/transactions" class="block hover:text-[#FFA500] text-center">Transaction</a>
+        <a href="/support" class="block hover:text-[#FFA500] text-center">Support</a>
+        <a href="/settings" class="block hover:text-[#FFA500] text-center">Setting</a>
+      </nav>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 ml-64 p-6 space-y-6 mt-[-80px] h-[calc(100%-6rem)] scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900">
+    <div class="p-6 rounded-lg shadow">
+      <h2 class="text-2xl font-bold text-yellow-400 mb-4">Predicted Stock Performance</h2>
+
+      <!-- Search Bar -->
+      <div class="mb-4 flex justify-end">
+        <input id="predictionSearch" type="text" placeholder="Search stock symbol..."
+          class="px-3 py-2 w-64 rounded-md border border-gray-600 text-black" />
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left border-collapse">
+          <thead class="text-orange-300 border-b border-gray-700">
+            <tr>
+              <th class="py-2">#</th>
+              <th>Symbol</th>
+              <th>Live Price</th>
+              <th>Predicted Price</th>
+              <th>Expected Profit (%)</th>
+              <th>Buy</th>
+            </tr>
+          </thead>
+          <tbody id="predictionTable">
+            {% for symbol, data in predictions.items() %}
+            <tr class="border-t border-gray-800">
+              <td class="py-2">{{ loop.index }}</td>
+              <td class="text-green-600 font-semibold">{{ symbol }}</td>
+              <td class="text-orange-600">₹{{ '%.2f' | format(data.live) }}</td>
+              <td class="text-blue-600">₹{{ '%.2f' | format(data.predicted) }}</td>
+              <td class="{% if data.profit >= 0 %}text-green-400{% else %}text-red-700{% endif %}">
+                {{ '%.2f' | format(data.profit) }}%
+              </td>
+              <td>
+                <form action="/buy_prediction/{{ symbol }}" method="POST" class="flex gap-2 items-center">
+                  <input type="hidden" name="price" value="{{ '%.2f' | format(data.live) }}">
+                  <input
+                    type="number"
+                    name="quantity"
+                    min="1"
+                    required
+                    class="w-16 px-2 py-1 rounded bg-[#2a2a2a] text-white"
+                    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                    onkeydown="return event.keyCode !== 69 && event.keyCode !== 189 && event.keyCode !== 190;"
+                    onblur="if (this.value === '' || this.value < 1) this.value = 1;"
+                  >
+                  <button type="submit" class="bg-green-500 hover:bg-green-600 text-sm px-3 py-1 rounded">Buy</button>
+                </form>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="6" class="text-center py-6 text-gray-400">No predictions available.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Search Script -->
+<script>
+  document.getElementById('predictionSearch').addEventListener('input', function () {
+    const query = this.value.toLowerCase();
+    const rows = document.querySelectorAll('#predictionTable tr');
+
+    rows.forEach(row => {
+      const symbolCell = row.querySelector('td:nth-child(2)');
+      if (symbolCell) {
+        const symbol = symbolCell.textContent.toLowerCase();
+        row.style.display = symbol.includes(query) ? '' : 'none';
+      }
+    });
+  });
+</script>
+{% endblock %}

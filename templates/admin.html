@@ -1,0 +1,134 @@
+{% extends 'admin_base.html' %}
+{% block title %}Admin Panel | TradeHaven{% endblock %}
+
+{% block content %}
+<div class="space-y-12">
+
+  <!-- Page Title -->
+  <div class="text-center">
+    <h1 class="text-4xl font-extrabold text-orange-400">TradeHaven Admin Dashboard</h1>
+    <p class="text-gray-400 mt-2">Manage users, stocks, and support tickets effectively</p>
+  </div>
+
+  <!-- Users Table -->
+  <section class="bg-gray-900 p-6 rounded-2xl shadow-lg">
+    <h2 class="text-2xl font-semibold text-yellow-300 mb-4">👥 Registered Users</h2>
+    <div class="overflow-auto">
+      <table class="w-full text-sm text-left border-collapse">
+        <thead class="bg-gray-800 text-orange-200">
+          <tr>
+            <th class="p-2">ID</th>
+            <th class="p-2">Name</th>
+            <th class="p-2">Email</th>
+            <th class="p-2">Balance</th>
+            <th class="p-2">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user in users %}
+          <tr class="border-t border-gray-700 hover:bg-gray-800">
+            <td class="p-2">{{ user.id }}</td>
+            <td class="p-2">{{ user.name }}</td>
+            <td class="p-2">{{ user.email }}</td>
+            <td class="p-2 font-semibold">₹{{ '%.2f' | format(user.balance) }}</td>
+            <td class="p-2 space-x-2">
+              <a href="/admin/reset_balance/{{ user.id }}" class="text-green-400 hover:underline">Reset</a>
+              <a href="/admin/delete_user/{{ user.id }}" class="text-red-400 hover:underline" onclick="return confirm('Delete user?')">Delete</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Support Tickets -->
+  <section class="bg-gray-900 p-6 rounded-2xl shadow-lg">
+    <h2 class="text-2xl font-semibold text-yellow-300 mb-4">📩 Support Tickets</h2>
+    <div class="overflow-auto">
+      <table class="w-full text-sm text-left border-collapse">
+        <thead class="bg-gray-800 text-orange-200">
+          <tr>
+            <th class="p-2">ID</th>
+            <th class="p-2">User</th>
+            <th class="p-2">Subject</th>
+            <th class="p-2">Message</th>
+            <th class="p-2">Date</th>
+            <th class="p-2">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for ticket in tickets %}
+          <tr class="border-t border-gray-700 hover:bg-gray-800">
+            <td class="p-2">{{ ticket.id }}</td>
+            <td class="p-2">{{ ticket.user_id }}</td>
+            <td class="p-2">{{ ticket.subject }}</td>
+            <td class="p-2">{{ ticket.message }}</td>
+            <td class="p-2">{{ ticket.date }}</td>
+            <td class="p-2">
+              <a href="/admin/delete_ticket/{{ ticket.id }}" class="text-red-400 hover:underline" onclick="return confirm('Delete this ticket?')">Delete</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Add Stock -->
+  <section class="bg-gray-900 p-6 rounded-2xl shadow-lg">
+    <h2 class="text-2xl font-semibold text-green-300 mb-4">📈 Add New Stock</h2>
+    <form action="/admin/add_stock" method="POST" class="grid grid-cols-2 gap-4 text-black">
+      <input name="symbol" type="text" placeholder="Symbol (e.g. TCS)" required class="rounded px-3 py-2" />
+      <input name="price" type="number" step="0.01" placeholder="Current Price" required class="rounded px-3 py-2" />
+      <input name="high" type="number" step="0.01" placeholder="Day High" required class="rounded px-3 py-2" />
+      <input name="low" type="number" step="0.01" placeholder="Day Low" required class="rounded px-3 py-2" />
+      <select name="sentiment" required class="rounded px-3 py-2">
+        <option value="">Select Sentiment</option>
+        <option value="Bullish">Bullish</option>
+        <option value="Bearish">Bearish</option>
+        <option value="Neutral">Neutral</option>
+      </select>
+      <button type="submit" class="bg-green-500 col-span-2 text-white font-bold px-4 py-2 rounded hover:bg-green-600">
+        ➕ Add Stock
+      </button>
+    </form>
+  </section>
+
+  <!-- Existing Stocks -->
+  {% if stocks %}
+  <section class="bg-gray-900 p-6 rounded-2xl shadow-lg">
+    <h2 class="text-2xl font-semibold text-yellow-300 mb-4">📊 Stocks List</h2>
+    <div class="overflow-auto">
+      <table class="w-full text-sm text-left border-collapse">
+        <thead class="bg-gray-800 text-orange-200">
+          <tr>
+            <th class="p-2">Symbol</th>
+            <th class="p-2">Price</th>
+            <th class="p-2">High</th>
+            <th class="p-2">Low</th>
+            <th class="p-2">Sentiment</th>
+            <th class="p-2">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for stock in stocks %}
+          <tr class="border-t border-gray-700 hover:bg-gray-800">
+            <td class="p-2">{{ stock.symbol }}</td>
+            <td class="p-2">₹{{ stock.price }}</td>
+            <td class="p-2">₹{{ stock.high }}</td>
+            <td class="p-2">₹{{ stock.low }}</td>
+            <td class="p-2">{{ stock.sentiment }}</td>
+            <td class="p-2">
+              <a href="/admin/delete_stock/{{ stock.symbol }}" class="text-red-400 hover:underline" onclick="return confirm('Delete this stock?')">Delete</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  {% endif %}
+
+</div>
+{% endblock %}

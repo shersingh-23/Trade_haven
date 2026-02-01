@@ -1,0 +1,179 @@
+<!-- base.html (cleaned with unified theme toggle) -->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}TradeHaven{% endblock %}</title>
+
+  <!-- Tailwind CDN & custom config -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#FFA500',
+            'dark-bg': '#0D0D0D',
+            'dark-card': '#1A1A1A'
+          },
+          boxShadow: {
+            neon: '0 0 3px #FFA500'
+          }
+        }
+      }
+    }
+  </script>
+
+  <!--  THEME VARIABLES  -->
+  <style>
+    /* --- Color palette variables that flip automatically --- */
+    :root[data-theme='light'] {
+      /* Base surfaces */
+      --bg-main: #ffffff;
+      --bg-secondary: #f0f0f0;
+      --text-main: #111;
+      --border: #ccc;
+      /* Accents */
+      --accent-green: #067647;
+      /* darker green for light mode */
+      --accent-red: #bb2124;
+      /* deeper red for light mode */
+      --accent-yellow: #b57700;
+      --accent-orange: #d46a00;
+    }
+
+    :root[data-theme='dark'] {
+      --bg-main: #111;
+      --bg-secondary: #1a1a1a;
+      --text-main: #ffffff;
+      --border: #333;
+      --accent-green: #22c55e;
+      /* Tailwind emerald‑500 */
+      --accent-red: #ef4444;
+      /* Tailwind red‑500    */
+      --accent-yellow: #eab308;
+      /* Tailwind yellow‑500 */
+      --accent-orange: #fb923c;
+      /* Tailwind orange‑400 */
+    }
+
+    html,
+    body {
+      background: var(--bg-main);
+      color: var(--text-main);
+    }
+
+    /* Utility classes that rely on the CSS vars */
+    .theme-bg {
+      background: var(--bg-secondary);
+    }
+
+    .theme-text {
+      color: var(--text-main);
+    }
+
+    .theme-border {
+      border-color: var(--border);
+    }
+
+    .accent-green {
+      color: var(--accent-green);
+    }
+
+    .accent-red {
+      color: var(--accent-red);
+    }
+
+    .accent-yellow {
+      color: var(--accent-yellow);
+    }
+
+    .accent-orange {
+      color: var(--accent-orange);
+    }
+
+    .bg-accent-green {
+      background: var(--accent-green);
+      color: #fff;
+    }
+
+    .bg-accent-red {
+      background: var(--accent-red);
+      color: #fff;
+    }
+
+    .bg-accent-yellow {
+      background: var(--accent-yellow);
+      color: #000;
+    }
+
+    .bg-accent-orange {
+      background: var(--accent-orange);
+      color: #fffcfc;
+    }
+  </style>
+</head>
+
+<body class="theme-bg theme-text">
+  <!-- FLASH MESSAGES -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="max-w-md mx-auto mt-6">
+    {% for category, message in messages %}
+    <div class="bg-red-500 text-white px-4 py-2 rounded-md">{{ message }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endwith %}
+
+  <!-- NAVBAR -->
+  <nav class="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-8 py-6 theme-bg shadow-md">
+    <h1 class="text-2xl font-bold text-primary">TRADEHAVEN</h1>
+    <div class="space-x-6">
+      <a href="/market" class="hover:text-primary">Market Overview</a>
+      <a href="/portfolio" class="hover:text-primary">Portfolio</a>
+      <a href="/support" class="hover:text-primary">Support</a>
+    </div>
+
+    <!-- AUTH BUTTONS -->
+    <div class="space-x-4">
+      <!-- THEME TOGGLE BUTTON -->
+      <button id="themeToggleBtn" onclick="toggleTheme()"
+        class="ml-6 text-xl rounded-full p-1   transition shadow-neon">
+        🌙
+
+      </button>
+      {% if session.get('user_id') %}
+      <a href="/logout" class="bg-primary text-black px-4 py-2 rounded-full font-bold">Logout</a>
+      {% else %}
+      <a href="/login" class="bg-primary text-black px-4 py-2 rounded-full font-bold">Log In</a>
+      <a href="/signup" class="bg-primary text-black px-4 py-2 rounded-full font-bold">Sign Up</a>
+      {% endif %}
+    </div>
+
+  </nav>
+
+  <!-- MAIN CONTENT (push down) -->
+  <div class="pt-24">
+    {% block content %}{% endblock %}
+  </div>
+
+  <!-- THEME SCRIPT -->
+  <script>
+    function toggleTheme() {
+      const html = document.documentElement;
+      const newTheme = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+      html.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const saved = localStorage.getItem('theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', saved);
+    });
+  </script>
+</body>
+
+</html>
