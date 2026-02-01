@@ -1,4 +1,4 @@
-# TradeHaven - Mock Trading Platform 🧠💰
+# TradeHaven - Mock Trading Platform
 
 A full-stack stock trading simulation web app built with Flask, SQLite, Chart.js, and vanilla JavaScript.
 
@@ -19,8 +19,6 @@ A full-stack stock trading simulation web app built with Flask, SQLite, Chart.js
 - Session-based authentication
 
 ---
-
-## 🚀 How to Run
 
 1. **Clone or download this project**
 
